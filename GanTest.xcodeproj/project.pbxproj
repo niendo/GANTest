@@ -128,14 +128,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0B3978732589251900578DB1 /* ModulesTests */ = {
+		0B3978732589251900578DB1 /* CharactersTests */ = {
 			isa = PBXGroup;
 			children = (
 				0B3978912589272600578DB1 /* CharactersWorkerTests.swift */,
 				0B3978A02589276400578DB1 /* CharacterDetail */,
 				0B3978992589275D00578DB1 /* CharactersList */,
 			);
-			path = ModulesTests;
+			path = CharactersTests;
 			sourceTree = "<group>";
 		};
 		0B3978992589275D00578DB1 /* CharactersList */ = {
@@ -200,7 +200,7 @@
 		0BB56A7F2588CE92002B6E5E /* GanTestTests */ = {
 			isa = PBXGroup;
 			children = (
-				0B3978732589251900578DB1 /* ModulesTests */,
+				0B3978732589251900578DB1 /* CharactersTests */,
 				0BB56A802588CE92002B6E5E /* GanTestTests.swift */,
 				0BB56A822588CE92002B6E5E /* Info.plist */,
 			);

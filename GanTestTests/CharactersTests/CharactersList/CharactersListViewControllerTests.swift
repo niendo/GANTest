@@ -37,10 +37,56 @@ class CharactersListViewControllerTests: XCTestCase {
         window = nil
         try super.tearDownWithError()
     }
-
-    func testMethodOk() {
+    
+    func testViewShouldFetchDataWhenLoadedOk() {
         loadView()
 
+        XCTAssert(interactor.fetchDataCalled, "Should fetch when the view is loaded")
     }
+    
+    func testViewShouldDisplayDataWhenFetchedOk() {
+        loadView()
+
+        let remoteModel = [CharacterRemoteModel(char_id: 1, name: "name", birthday: "birthday", occupation: ["Occupation"], img: "Img", status: "status", nickname: "nickname", appearance: [1], portrayed: "portrayed", category: "category", better_call_saul_appearance: [1])]
+
+        let viewModel = CharacterListViewModel(models: remoteModel)
+        sut.displayFetchedData(viewModel: viewModel)
+        
+        XCTAssertEqual(sut.tableView.numberOfRows(inSection: 0), viewModel.charactersViewModel?.count)
+
+    }
+    
+    func testViewShouldDisplayDataWhenFilteredOk() {
+        loadView()
+
+        let remoteModel = [CharacterRemoteModel(char_id: 1, name: "name", birthday: "birthday", occupation: ["Occupation"], img: "Img", status: "status", nickname: "nickname", appearance: [1], portrayed: "portrayed", category: "category", better_call_saul_appearance: [1])]
+
+        let viewModel = CharacterListViewModel(models: remoteModel)
+        sut.displayFilteredData(viewModel: viewModel)
+        
+        XCTAssertEqual(sut.tableView.numberOfRows(inSection: 0), viewModel.charactersViewModel?.count)
+
+    }
+    
+    func testViewShouldDisplayErrorOk() {
+        loadView()
+        let alertviewModel = AlertViewModel(title: "title", subtitle: "subtitle", acceptTitle: "accept", cancelTitle: nil)
+       
+        sut.showErrorAlert(alertViewModel: alertviewModel)
+        
+        XCTAssertTrue(sut.alert?.isBeingPresented ?? false, "Alert should be presented")
+
+    }
+    
+    func testViewShouldDisplayLoadingOk() {
+        loadView()
+       
+       
+        sut.spinnerView(add: true)
+        
+        XCTAssertTrue(sut.spinner?.isViewLoaded ?? false, "spinner should be presented")
+
+    }
+    
     
 }

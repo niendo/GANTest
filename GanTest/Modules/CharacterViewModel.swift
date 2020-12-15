@@ -73,7 +73,6 @@ extension CharacterViewModel {
 
 struct CharacterListViewModel {
     var charactersViewModel: [CharacterViewModel]?
-    var filteredCharactersViewModel = [CharacterViewModel]()
     var seasonFilterElements = [Int]()
     private var models: [CharacterRemoteModel]
     

@@ -8,6 +8,7 @@
 import UIKit
 protocol CharactersListViewControllerInterface: class {
     func displayFetchedData(viewModel: CharacterListViewModel)
+    func displayFilteredData(viewModel: CharacterListViewModel)
     func spinnerView(add: Bool)
     func showErrorAlert(alertViewModel: AlertViewModel)
 }
@@ -47,76 +48,24 @@ class CharactersListViewController: UIViewController, CharactersListViewControll
         let nib = UINib(nibName: "CharactersTableViewCell", bundle: nil)
         tableView.register(nib, forCellReuseIdentifier: "characters")
         interactor?.fetchData()
+        setSearchController()
+
     }
     
     // MARK: - Show fetched Data
     func displayFetchedData(viewModel: CharacterListViewModel) {
+        displayFilteredData(viewModel: viewModel)
+        setSeasonStackViewFilter(seasons: viewModel.seasonFilterElements)
+
+    }
+    
+    func displayFilteredData(viewModel: CharacterListViewModel) {
+        
         self.viewModel = viewModel
-        resultSearchController = ({
-            let controller = UISearchController(searchResultsController: nil)
-            controller.searchResultsUpdater = self
-            controller.dimsBackgroundDuringPresentation = false
-            controller.searchBar.sizeToFit()
-            tableView.tableHeaderView = controller.searchBar
-            return controller
-        })()
-        resultSearchController.delegate = self
-        
-        let label: UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 50))
-        label.text = "Select Season:"
-        seasonsStackView.addArrangedSubview(label)
-        for season in viewModel.seasonFilterElements {
-            let button: UIButton = UIButton(frame: CGRect(x: 0, y: 0, width: 30, height: 50))
-            button.setTitle("\(season)", for: .normal)
-            button.tag = season
-
-            button.setTitleColor(.systemBlue, for: .normal)
-            button.setTitleColor(.systemGray, for: .selected)
-            button.addTarget(self, action:#selector(self.buttonClicked), for: .touchUpInside)
-            button.translatesAutoresizingMaskIntoConstraints = false
-
-            seasonsStackView.addArrangedSubview(button)
-        }
-        
-        
-        resetDataFilters()
-    }
-    
-    func resetDataFilters() {
-        if let characters = self.viewModel?.charactersViewModel {
-            self.viewModel?.filteredCharactersViewModel =  characters
-        }
-        
         tableView.reloadData()
-
-    }
     
-    @objc func buttonClicked(_ sender: UIButton) {
-        sender.isEnabled = false
-        sender.setTitleColor(.systemGray, for: .normal)
-        for element in seasonsStackView.subviews {
-            if let button = element as? UIButton {
-                if sender.tag != button.tag {
-                    button.setTitleColor(.systemBlue, for: .normal)
-                    button.isEnabled = true
-                }
-                    
-            }
-            
-        }
-        viewModel?.filteredCharactersViewModel.removeAll(keepingCapacity: false)
-        self.tableView.reloadData()
-
-        let filteredArray = viewModel?.charactersViewModel?.filter { $0.seasonAppearanceArray.contains(sender.tag)}
-        if let filteredArray = filteredArray {
-            viewModel?.filteredCharactersViewModel = filteredArray
-        }
-
-        self.tableView.reloadData()
-        
-        
     }
-    
+
     // MARK: - Spinner view
     func spinnerView(add: Bool) {
         if add{
@@ -136,6 +85,62 @@ class CharactersListViewController: UIViewController, CharactersListViewControll
         
 
     }
+    // MARK: - Show error alert
+
+    func showErrorAlert(alertViewModel: AlertViewModel) {
+  
+        createNoActionAlert(alertViewModel: alertViewModel)
+        
+    }
+    
+    // MARK: - Set search Controller
+
+    private func setSearchController() {
+        resultSearchController = ({
+            let controller = UISearchController(searchResultsController: nil)
+            controller.searchResultsUpdater = self
+            controller.dimsBackgroundDuringPresentation = false
+            controller.searchBar.sizeToFit()
+            tableView.tableHeaderView = controller.searchBar
+            return controller
+        })()
+        resultSearchController.delegate = self
+    }
+    
+    @objc func buttonClicked(_ sender: UIButton) {
+        sender.isEnabled = false
+        sender.setTitleColor(.systemGray, for: .normal)
+        for element in seasonsStackView.subviews {
+            if let button = element as? UIButton {
+                if sender.tag != button.tag {
+                    button.setTitleColor(.systemBlue, for: .normal)
+                    button.isEnabled = true
+                }
+                    
+            }
+        }
+        interactor?.getCharactersIn(season: sender.tag)
+        
+    }
+    // MARK: - set Season Filter
+
+    private func setSeasonStackViewFilter(seasons: [Int]) {
+        let label: UILabel = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 50))
+        label.text = "Select Season:"
+        seasonsStackView.addArrangedSubview(label)
+        for season in seasons {
+            let button: UIButton = UIButton(frame: CGRect(x: 0, y: 0, width: 30, height: 50))
+            button.setTitle("\(season)", for: .normal)
+            button.tag = season
+
+            button.setTitleColor(.systemBlue, for: .normal)
+            button.setTitleColor(.systemGray, for: .selected)
+            button.addTarget(self, action:#selector(self.buttonClicked), for: .touchUpInside)
+            button.translatesAutoresizingMaskIntoConstraints = false
+
+            seasonsStackView.addArrangedSubview(button)
+        }
+    }
     
     // MARK: - Create Alerts
     private func createDismissalAlert(alertViewModel: AlertViewModel) {
@@ -153,11 +158,6 @@ class CharactersListViewController: UIViewController, CharactersListViewControll
         self.present(alert!, animated: true)
     }
     
-    func showErrorAlert(alertViewModel: AlertViewModel) {
-  
-        createNoActionAlert(alertViewModel: alertViewModel)
-        
-    }
     
     private func createNoActionAlert(alertViewModel: AlertViewModel) {
         alert = UIAlertController(title: alertViewModel.title, message: alertViewModel.subtitle, preferredStyle: .alert)
@@ -198,7 +198,7 @@ extension CharactersListViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         
-        return viewModel?.filteredCharactersViewModel.count ?? 0
+        return viewModel?.charactersViewModel?.count ?? 0
         
     }
     
@@ -206,7 +206,7 @@ extension CharactersListViewController: UITableViewDelegate, UITableViewDataSour
         
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "characters") as! CharactersTableViewCell
-        cell.set(viewModel: viewModel?.filteredCharactersViewModel[indexPath.row])
+        cell.set(viewModel: viewModel?.charactersViewModel?[indexPath.row])
       
         return cell
         
@@ -234,21 +234,12 @@ extension CharactersListViewController: UISearchResultsUpdating, UISearchControl
     
     func didDismissSearchController(_ searchController: UISearchController) {
         seasonsStackView.isHidden = false
-        resetDataFilters()
+        interactor?.filterCharactersByName("")
         
     }
     
     func updateSearchResults(for searchController: UISearchController) {
-        viewModel?.filteredCharactersViewModel.removeAll(keepingCapacity: false)
-
-        let filteredArray = viewModel?.charactersViewModel?.filter { $0.name.contains(searchController.searchBar.text!)
-            
-        }
-        if let filteredArray = filteredArray {
-            viewModel?.filteredCharactersViewModel = filteredArray
-
-        }
-
-        self.tableView.reloadData()
+        
+        interactor?.filterCharactersByName(searchController.searchBar.text ?? "")
     }
 }

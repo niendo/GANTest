@@ -8,6 +8,9 @@
 import Foundation
 protocol CharactersListInteractorInterface {
     func fetchData()
+    func getAllCharacters()
+    func getCharactersIn(season: Int)
+    func filterCharactersByName(_ nameChar: String)
     func select(character: CharacterViewModel)
 }
 
@@ -17,7 +20,9 @@ protocol CharactersListDataStore {
 }
 
 class CharactersListInteractor: CharactersListInteractorInterface, CharactersListDataStore {
+
     var characterDetail: CharacterViewModel?
+    var data: [CharacterRemoteModel]?
     var error: CharacterDetailError?
 
     var presenter: CharactersListPresenterInterface?
@@ -40,14 +45,34 @@ class CharactersListInteractor: CharactersListInteractorInterface, CharactersLis
                 self.presenter?.show(error: "An error has ocurred fetching the information")
                 return
             }
-            
+            self.data = data
             self.presenter?.show(data: data)
         })
      
     }
     
+    // MARK: - Select character
+
     func select(character: CharacterViewModel) {
         self.characterDetail = character
     }
+    // MARK: - Restore original data
+
+    func getAllCharacters() {
+        if let data = data {
+            presenter?.show(data: data)
+        }
+    }
+    // MARK: - Filters
+
+    func getCharactersIn(season: Int) {
+        presenter?.filter(season: season)
+    }
+    
+
+    func filterCharactersByName(_ nameChar: String) {
+        presenter?.filter(charName: nameChar)
+    }
+
 
 }
